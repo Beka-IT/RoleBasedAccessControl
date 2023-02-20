@@ -61,10 +61,18 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseMiddleware<ErrorHandlerMiddleware>();
 }
 
 app.UseHttpsRedirection();
 
+app.UseStatusCodePages(async context => {
+    if (context.HttpContext.Response.StatusCode == 401)
+    {
+        // your redirect
+        context.HttpContext.Response.Redirect("/Home/Error");
+    }
+});
 app.UseAuthentication();
 app.UseAuthorization();
 

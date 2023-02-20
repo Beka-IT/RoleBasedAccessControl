@@ -1,10 +1,15 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Server.Enums;
 using Server.Models;
 using Server.Services;
+using System;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -13,6 +18,7 @@ namespace Server.Helpers
 {
     public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
+        private string failReason;
         private readonly IUserService _userService;
 
         public BasicAuthenticationHandler(
@@ -34,7 +40,7 @@ namespace Server.Helpers
                 return AuthenticateResult.NoResult();
 
             if (!Request.Headers.ContainsKey("Authorization"))
-                return AuthenticateResult.Fail("Missing Authorization Header");
+                throw new AppException("Вы не вошли в систему!");
 
             User user = null;
             try
@@ -48,18 +54,17 @@ namespace Server.Helpers
             }
             catch
             {
-                return AuthenticateResult.Fail("Invalid Authorization Header");
+                throw new AppException("Неправильный Authorization Header");
             }
 
             if (user == null)
-                return AuthenticateResult.Fail("Неправильный логи или пароль!");
-            
+            {
+                throw new AppException("Неправильный логин или пароль!");
+            }
 
-            var controllerName = Context.Request.RouteValues["controller"].ToString();
-            var actionName = Context.Request.RouteValues["action"].ToString();
+            var controllerName = Context.Request.RouteValues["controller"]?.ToString();
 
-
-            if (user.Role == RoleType.Admin && actionName == "GetAllUsers")
+            if (user.Role == RoleType.Admin && controllerName == "Users")
             {
                 var ticket = GetTicket(user);
 
@@ -80,7 +85,8 @@ namespace Server.Helpers
                 return AuthenticateResult.Success(ticket);
             }
 
-            return AuthenticateResult.Fail("У вас нет доступа!");
+            failReason = "У вас нет доступа!"!;
+            throw new AppException(failReason);
         }
 
         private AuthenticationTicket GetTicket(User user)
@@ -94,5 +100,4 @@ namespace Server.Helpers
             return new AuthenticationTicket(principal, Scheme.Name);
         }
     }
-
 }
