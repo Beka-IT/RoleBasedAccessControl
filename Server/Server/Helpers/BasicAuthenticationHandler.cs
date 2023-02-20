@@ -18,7 +18,6 @@ namespace Server.Helpers
 {
     public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
-        private string failReason;
         private readonly IUserService _userService;
 
         public BasicAuthenticationHandler(
@@ -85,8 +84,7 @@ namespace Server.Helpers
                 return AuthenticateResult.Success(ticket);
             }
 
-            failReason = "У вас нет доступа!"!;
-            throw new AppException(failReason);
+            throw new AppException("У вас нет доступа!");
         }
 
         private AuthenticationTicket GetTicket(User user)
