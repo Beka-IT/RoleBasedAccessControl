@@ -6,5 +6,6 @@ namespace Server.Services
     {
         void OrderProducts(Order order);
         void CancelOrderById(int id);
+        IEnumerable<Order> GetAllOrders();
     }
 }

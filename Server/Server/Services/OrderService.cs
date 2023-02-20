@@ -23,6 +23,11 @@ namespace Server.Services
             }
         }
 
+        public IEnumerable<Order> GetAllOrders()
+        {
+            return _context.Orders.ToArray();
+        }
+
         public void OrderProducts(Order order)
         {
             if(order == null)
@@ -32,5 +37,7 @@ namespace Server.Services
             _context.Orders.Add(order);
             _context.SaveChanges();
         }
+
+
     }
 }
